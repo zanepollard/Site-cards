@@ -1,2 +1,2 @@
 # Site-cards
-generates positive card files for use inTSC software
+generates positive card files for use in TSC software
