@@ -10,36 +10,19 @@ class info():
 class EditDialog(wx.Dialog):
 	def __init__(self,parent,id,title):
 		wx.Dialog.__init__(self,parent,id,title)
-		v = parent.inf.cardList
-		print(v)
+		self.p = parent
 		self.InitUI()
-		self.SetSize((350,420))
+		self.SetSize((450,380))
 		self.SetTitle('Edit')
 	
 	def InitUI(self):
 		pnl = wx.Panel(self)
 		vbox = wx.BoxSizer(wx.VERTICAL)
-		sb = wx.StaticBox(pnl, label="Add")
+		subTitle = "Editing Card " + self.p.currentEdit
+		sb = wx.StaticBox(pnl, label=subTitle)
 		sbs = wx.StaticBoxSizer(sb,orient=wx.VERTICAL)
-
 		font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
 		font.SetPointSize(4)
-
-		#CARD SPACER
-		self.cSpacer = wx.StaticText(pnl, label='')
-		self.cSpacer.SetFont(font)
-		self.cSpacer.SetForegroundColour('#ff0000')
-		sbs.Add(self.cSpacer,flag=wx.EXPAND|wx.LEFT|wx.RIGHT)
-
-		#CARD
-		hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-		cLabel = wx.StaticText(pnl,label="Card:")
-		self.cEntry = wx.TextCtrl(pnl)
-		self.cEntry.SetMaxLength(12)
-
-		hbox1.Add(cLabel,proportion=1,flag=wx.LEFT,border=10)
-		hbox1.Add(self.cEntry,proportion=2,flag=wx.LEFT|wx.EXPAND|wx.RIGHT, border=10)
-		sbs.Add(hbox1,flag=wx.EXPAND)
 
 		#ACCOUNT SPACER
 		self.aSpacer = wx.StaticText(pnl, label='')
@@ -50,8 +33,10 @@ class EditDialog(wx.Dialog):
 		#ACCOUNT
 		hbox2 = wx.BoxSizer(wx.HORIZONTAL)
 		aLabel = wx.StaticText(pnl,label="Account:")
+		oldAccText = self.p.inf.cardList[self.p.currentEdit].getAccount()
 		self.aEntry = wx.TextCtrl(pnl)
 		self.aEntry.SetMaxLength(12)
+		self.aEntry.write(oldAccText)
 
 		hbox2.Add(aLabel,proportion=1,flag=wx.LEFT,border=10)
 		hbox2.Add(self.aEntry,proportion=2,flag=wx.LEFT|wx.EXPAND|wx.RIGHT, border=10)
@@ -64,10 +49,12 @@ class EditDialog(wx.Dialog):
 		sbs.Add(self.dSpacer,flag=wx.EXPAND|wx.LEFT|wx.RIGHT)
 
 		#DESCRIPTION
+		oldDesc = self.p.inf.cardList[self.p.currentEdit].getDescription()
 		hbox3 = wx.BoxSizer(wx.HORIZONTAL)
 		dLabel = wx.StaticText(pnl,label="Name:")
 		self.dEntry = wx.TextCtrl(pnl)
 		self.dEntry.SetMaxLength(30)
+		self.dEntry.write(oldDesc)
 
 		hbox3.Add(dLabel,proportion=1,flag=wx.LEFT,border=10)
 		hbox3.Add(self.dEntry,proportion=2,flag=wx.LEFT|wx.EXPAND|wx.RIGHT, border=10)
@@ -80,10 +67,12 @@ class EditDialog(wx.Dialog):
 		sbs.Add(self.pSpacer,flag=wx.EXPAND|wx.LEFT|wx.RIGHT)
 
 		#PIN
+		oldPin = self.p.inf.cardList[self.p.currentEdit].getPin()
 		hbox4 = wx.BoxSizer(wx.HORIZONTAL)
 		pLabel = wx.StaticText(pnl,label="PIN:")
 		self.pEntry = wx.TextCtrl(pnl)
 		self.pEntry.SetMaxLength(30)
+		self.pEntry.write(oldPin)
 
 		hbox4.Add(pLabel,proportion=1,flag=wx.LEFT,border=10)
 		hbox4.Add(self.pEntry,proportion=2,flag=wx.LEFT|wx.EXPAND|wx.RIGHT, border=10)
@@ -96,10 +85,12 @@ class EditDialog(wx.Dialog):
 		sbs.Add(self.sSpacer,flag=wx.EXPAND|wx.LEFT|wx.RIGHT)
 
 		#SEQUENCE
+		oldSeq = self.p.inf.cardList[self.p.currentEdit].getSeq()
 		hbox5 = wx.BoxSizer(wx.HORIZONTAL)
 		sLabel = wx.StaticText(pnl,label="Prompts:")
 		self.sEntry = wx.TextCtrl(pnl)
 		self.sEntry.SetMaxLength(30)
+		self.sEntry.write(oldSeq)
 
 		hbox5.Add(sLabel,proportion=1,flag=wx.LEFT,border=10)
 		hbox5.Add(self.sEntry,proportion=2,flag=wx.LEFT|wx.EXPAND|wx.RIGHT, border=10)
@@ -112,10 +103,12 @@ class EditDialog(wx.Dialog):
 		sbs.Add(self.dSpacer,flag=wx.EXPAND|wx.LEFT|wx.RIGHT)
 
 		#AUTHORIZATION
+		oldAuth = self.p.inf.cardList[self.p.currentEdit].getAuth()
 		hbox6 = wx.BoxSizer(wx.HORIZONTAL)
 		authLabel = wx.StaticText(pnl,label="Restrictions:")
 		self.authEntry = wx.TextCtrl(pnl)
 		self.authEntry.SetMaxLength(30)
+		self.authEntry.write(oldAuth)
 
 		hbox6.Add(authLabel,proportion=1,flag=wx.LEFT,border=10)
 		hbox6.Add(self.authEntry,proportion=2,flag=wx.LEFT|wx.EXPAND|wx.RIGHT, border=10)
@@ -129,11 +122,12 @@ class EditDialog(wx.Dialog):
 
 		#BUTTONS
 		hbox7 = wx.BoxSizer(wx.HORIZONTAL)
-		aButt = wx.Button(pnl,label='ADD')
+		aButt = wx.Button(pnl,label='SAVE')
+		aButt.Bind(wx.EVT_BUTTON,self.OnSave)
 		hbox7.Add(aButt,flag=wx.EXPAND,proportion=1)
 
 		cButt = wx.Button(pnl,label="CANCEL")
-		#cButt.Bind(wx.EVT_BUTTON,self.OnExit)
+		cButt.Bind(wx.EVT_BUTTON,self.OnExit)
 		hbox7.Add(cButt,flag=wx.EXPAND,proportion=1)
 
 		#SPACER
@@ -145,6 +139,76 @@ class EditDialog(wx.Dialog):
 		sbs.Add(hbox7,flag=wx.EXPAND,proportion=1)
 
 		pnl.SetSizer(sbs)
+
+	def OnSave(self, e):
+		validEntry=True
+		if(files.numCheck(self.aEntry.GetValue())[1] == False or self.aEntry.GetValue() == ""):
+			self.aSpacer.SetLabel("Account Value can only contain numbers (0-9)")
+			validEntry = False
+		else:
+			self.aSpacer.SetLabel("")
+		if(files.numCheck(self.pEntry.GetValue())[1] == False and self.pEntry.GetValue() != ""):
+			self.pSpacer.SetLabel("PIN Value can only contain numbers (0-9)")
+			validEntry = False
+		else:
+			self.pSpacer.SetLabel("")
+		if(files.numCheck(self.sEntry.GetValue())[1] == False):
+			self.sSpacer.SetLabel("Sequence Value can only contain numbers (0-9)")
+			validEntry = False
+		else:
+			self.sSpacer.SetLabel("")
+		
+		if validEntry:
+			self.completeCard = card.card(self.p.currentEdit,self.aEntry.GetValue(),self.dEntry.GetValue(),self.pEntry.GetValue(),self.sEntry.GetValue(),self.authEntry.GetValue(),True)
+			
+			self.p.inf.cardList[self.p.currentEdit] = self.completeCard
+			self.EndModal(1)
+	
+	def OnExit(self, e):
+		self.EndModal(0)
+
+class ExistsError(wx.Dialog):
+	def __init__(self,*args,**kw):
+		super(ExistsError,self).__init__(*args,**kw)
+
+		self.InitUI()
+		self.SetSize((220,150))
+		self.SetTitle('Oops')
+	
+	def InitUI(self):	
+		font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		font.SetPointSize(12)
+		bfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		bfont.SetPointSize(4)
+
+		pnl = wx.Panel(self)
+		vbox = wx.BoxSizer(wx.VERTICAL)
+		sb = wx.StaticBox(pnl, label="")
+		sb.SetFont(font)
+		sbs = wx.StaticBoxSizer(sb,orient=wx.VERTICAL)
+
+		#spacer
+		spacer=wx.BoxSizer(wx.HORIZONTAL)
+		spaceText=wx.StaticText(pnl,label="An entry with that card \nnumber already exists!")
+		spaceText.SetFont(font)
+		spacer.Add(spaceText)
+		sbs.Add(spacer)
+		#spacer2
+		spacer2=wx.BoxSizer(wx.HORIZONTAL)
+		spacer2.Add(wx.StaticText(pnl,label=""))
+		sbs.Add(spacer2)
+
+		hbox = wx.BoxSizer(wx.HORIZONTAL)
+		bOK = wx.Button(pnl,label='OK')
+		bOK.Bind(wx.EVT_BUTTON,self.OnOK)
+		hbox.Add(bOK)
+
+		sbs.Add(hbox,flag=wx.EXPAND|wx.LEFT|wx.RIGHT,proportion=1,border=10)
+
+		pnl.SetSizer(sbs)
+
+	def OnOK(self,e):
+		self.EndModal(1)
 
 class SearchDialog(wx.Dialog):
 	def __init__(self,information):
@@ -158,31 +222,52 @@ class SearchDialog(wx.Dialog):
 		pnl = wx.Panel(self)
 		vBox = wx.BoxSizer(wx.VERTICAL)
 
-
 class Confirmation(wx.Dialog):
-	def __init__(self,information):
-		super(AddDialog,self).__init__(*args,**kw)
+	def __init__(self,*args,**kw):
+		super(Confirmation,self).__init__(*args,**kw)
 
 		self.InitUI()
-		self.SetSize((200,200))
+		self.SetSize((200,150))
 		self.SetTitle('Confirm')
 	
-	def InitUI(self):
+	def InitUI(self):	
+		font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		font.SetPointSize(24)
+		bfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		bfont.SetPointSize(4)
+
 		pnl = wx.Panel(self)
-		vBox = wx.BoxSizer(wx.VERTICAL)
+		vbox = wx.BoxSizer(wx.VERTICAL)
+		sb = wx.StaticBox(pnl, label="Are you sure?")
+		sb.SetFont(font)
+		sbs = wx.StaticBoxSizer(sb,orient=wx.VERTICAL)
 
-		hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-		conf = wx.StaticText(pnl, label='Are you sure?')
-		hbox1.Add(conf,flag=wx.EXPAND,border=10)
+		#spacer
+		spacer=wx.BoxSizer(wx.HORIZONTAL)
+		spacer.Add(wx.StaticText(pnl,label=""))
+		sbs.Add(spacer)
+		#spacer2
+		spacer2=wx.BoxSizer(wx.HORIZONTAL)
+		spacer2.Add(wx.StaticText(pnl,label=""))
+		sbs.Add(spacer2)
 
-		hbox2=wx.BoxSizer(wx.HORIZONTAL)
-		yBut = wx.Button(pnl, label='YES')
-		hbox2.Add(yBut,flag=wx.EXPAND)
-		nBut = wx.Button(pnl,label='NO')
-		hbox2.Add(nBut,flag=wx.EXPAND)
+		hbox = wx.BoxSizer(wx.HORIZONTAL)
+		bYes = wx.Button(pnl,label='YES')
+		bNo = wx.Button(pnl,label='NO')
+		bYes.Bind(wx.EVT_BUTTON,self.OnYes)
+		bNo.Bind(wx.EVT_BUTTON,self.OnNo)
+		hbox.Add(bYes,flag=wx.EXPAND,proportion=1,border=10)
+		hbox.Add(bNo,flag=wx.EXPAND,proportion=1,border=10)
 
-		vBox.Add(hbox1)
-		vBox.Add(hbox2)
+		sbs.Add(hbox)
+
+		pnl.SetSizer(sbs)
+
+	def OnYes(self,e):
+		self.EndModal(1)
+
+	def OnNo(self,e):
+		self.EndModal(0)
 
 class AddDialog(wx.Dialog):
 	def __init__(self,*args,**kw):
@@ -324,13 +409,7 @@ class AddDialog(wx.Dialog):
 
 	def GetValues(self, e):
 		validEntry=True
-		'''
-		print("card " + self.cEntry.GetValue())
-		print("acc " + self.aEntry.GetValue())
-		print("det " + self.dEntry.GetValue())
-		print("pin " + self.pEntry.GetValue())
-		print("seq " + self.sEntry.GetValue())
-		'''
+
 		if(files.numCheck(self.cEntry.GetValue())[1] == False or self.cEntry.GetValue() == ""):
 			self.cSpacer.SetLabel("Card Value can only contain numbers (0-9)")
 			validEntry = False
@@ -462,6 +541,7 @@ class Main_Window(wx.Frame):
 
 		b5 = wx.Button(panel,label="SAVE TO CARDS.TXT")
 		b5.SetFont(font)
+		b5.Bind(wx.EVT_BUTTON,self.OnSave)
 		hbox3.Add(b5,flag=wx.EXPAND)
 
 
@@ -477,8 +557,11 @@ class Main_Window(wx.Frame):
 	def OnEdit(self,e):
 		sel = self.listbox.GetSelection()
 		if sel != -1:
+			self.currentEdit = self.inf.cardList[self.listbox.GetString(sel).split()[3]].getCard()
 			ed = EditDialog(self, -1, 'Edit')
 			result = ed.ShowModal()
+			if result ==1:
+				self.Refresh()
 			ed.Destroy()
 
 	def Refresh(self):
@@ -490,21 +573,27 @@ class Main_Window(wx.Frame):
 			else:
 				tgl = "INACTIVE "
 			space = ""
-			for __ in range(18 - len(self.inf.cardList[i].card)):
-				space = space + " "
-			self.listbox.Append(tgl + " CARD #: " + self.inf.cardList[i].card + space + self.inf.cardList[i].description)
+			for __ in range(8 - len(self.inf.cardList[i].card)):
+				space = space + "  "
+			self.listbox.Append(tgl + "   CARD #: " + self.inf.cardList[i].card + space + self.inf.cardList[i].description)
 
 	def OnNew(self, e):
-		addDialog = Confirmation(None, title='Confirm')
-		addDialog.ShowModal()
+		addDialog = Confirmation(None)
+		result = addDialog.ShowModal()
+		if result == 1:
+			self.inf.cardList.clear()
+			self.listbox.Clear()	
 		addDialog.Destroy()
-		self.listbox.Clear()
+
+	def OnSave(self,e):
+		files.cardsOutput(self.inf.cardList)
+		print("Done!")
+		
 	
 	def OnToggleOn(self, e):
 		sel = self.listbox.GetSelection()
 		if sel != -1:
 			if self.inf.cardList[self.listbox.GetString(sel).split()[3]].getActive() is not True:
-				print(self.listbox.GetString(sel).split()[3] + " Turned On")
 				self.inf.cardList[self.listbox.GetString(sel).split()[3]].setActive(True)
 				self.Refresh()
 	
@@ -512,16 +601,19 @@ class Main_Window(wx.Frame):
 		sel = self.listbox.GetSelection()
 		if sel != -1:	
 			if self.inf.cardList[self.listbox.GetString(sel).split()[3]].getActive() is True:
-				print(self.listbox.GetString(sel).split()[3] + " Turned Off")
 				self.inf.cardList[self.listbox.GetString(sel).split()[3]].setActive(False)
 				self.Refresh()
 
 	def OnDelete(self, e):
 		sel = self.listbox.GetSelection()
 		if sel != -1:
-			print(self.listbox.GetString(sel).split()[3] + " Deleted")
-			self.listbox.Delete(sel)
-			print(self.inf.cardList.pop(self.listbox.GetString(sel).split()[3]))
+			addDialog = Confirmation(None)
+			result = addDialog.ShowModal()
+			if result == 1:
+				self.listbox.Delete(sel)
+				self.inf.cardList.pop(self.listbox.GetString(sel).split()[3])
+			addDialog.Destroy()
+			
 
 	def OnAdd(self, e):
 		addDialog = AddDialog(None)
@@ -543,7 +635,9 @@ class Main_Window(wx.Frame):
 			self.inf.cardList[card.card] = card
 			self.Refresh()
 		else:
-			print("card already in deck")
+			addDialog = ExistsError(None)
+			addDialog.ShowModal()
+			addDialog.Destroy()
 
 
 def main():
