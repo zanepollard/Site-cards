@@ -210,18 +210,6 @@ class ExistsError(wx.Dialog):
 	def OnOK(self,e):
 		self.EndModal(1)
 
-class SearchDialog(wx.Dialog):
-	def __init__(self,information):
-		super(AddDialog,self).__init__(*args,**kw)
-
-		self.InitUI()
-		self.SetSize((200,200))
-		self.SetTitle('Search')
-	
-	def InitUI(self):
-		pnl = wx.Panel(self)
-		vBox = wx.BoxSizer(wx.VERTICAL)
-
 class Confirmation(wx.Dialog):
 	def __init__(self,*args,**kw):
 		super(Confirmation,self).__init__(*args,**kw)
@@ -238,13 +226,15 @@ class Confirmation(wx.Dialog):
 
 		pnl = wx.Panel(self)
 		vbox = wx.BoxSizer(wx.VERTICAL)
-		sb = wx.StaticBox(pnl, label="Are you sure?")
+		sb = wx.StaticBox(pnl)
 		sb.SetFont(font)
 		sbs = wx.StaticBoxSizer(sb,orient=wx.VERTICAL)
 
 		#spacer
 		spacer=wx.BoxSizer(wx.HORIZONTAL)
-		spacer.Add(wx.StaticText(pnl,label=""))
+		confText = wx.StaticText(pnl,label="       Are you sure?")
+		confText.SetFont(font)
+		spacer.Add(confText)
 		sbs.Add(spacer)
 		#spacer2
 		spacer2=wx.BoxSizer(wx.HORIZONTAL)
@@ -444,6 +434,7 @@ class Main_Window(wx.Frame):
 	def __init__(self, *args, **kwargs):
 		super(Main_Window, self).__init__(*args, **kwargs)
 		icon = wx.Icon("tsc.ico", wx.BITMAP_TYPE_ANY)
+		self.searchType = ""
 		self.currentEdit = ""
 		self.inf = info()
 		self.SetIcon(icon)
@@ -463,6 +454,7 @@ class Main_Window(wx.Frame):
 
 		imp = wx.Menu()
 		imCard = imp.Append(wx.ID_ANY,'Import Cards.txt...')
+		imData = imp.Append(wx.ID_ANY,'Import from database...')
 		fileMenu.Append(wx.ID_ANY, 'I&mport',imp)
 		fileMenu.AppendSeparator()
 		menuQuit = fileMenu.Append(wx.ID_EXIT,'&Quit')
@@ -470,13 +462,12 @@ class Main_Window(wx.Frame):
 
 		byCard = searchMenu.Append(wx.ID_ANY, '&By Card Number')
 		byAcct = searchMenu.Append(wx.ID_ANY, '&By Account Number')
-		menubar.Append(searchMenu, '&Search')
 
 		self.SetMenuBar(menubar)
 		self.Bind(wx.EVT_MENU, self.OnQuit, menuQuit)
 		self.Bind(wx.EVT_MENU, self.OnNew, menuNew)
 		self.Bind(wx.EVT_MENU, self.OnImportCards, imCard)
-		self.SetSize((880, 340))
+		self.SetSize((880, 600))
 		
 		panel = wx.Panel(self)
 
@@ -504,27 +495,24 @@ class Main_Window(wx.Frame):
 		self.listbox = wx.ListBox(panel)
 		hbox2.Add(self.listbox, proportion=1, flag=wx.EXPAND)
 		vbox.Add(hbox2, proportion=1, flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=10)
+		
 
 		b1 = wx.Button(panel,label='ADD CARD')
-		b1.SetFont(font)
 		hbox3.Add(b1,flag=wx.EXPAND, border=10)
 
 		fill1.Add(wx.StaticText(panel,label=""),flag=wx.EXPAND,border=10)
 		hbox3.Add(fill1,flag=wx.EXPAND,border=10)
 
 		eBut = wx.Button(panel,label='EDIT CARD')
-		eBut.SetFont(font)
 		hbox3.Add(eBut,flag=wx.EXPAND, border=10)
 
 		eBut.Bind(wx.EVT_BUTTON,self.OnEdit)
 
 		adBox = wx.BoxSizer(wx.HORIZONTAL)
 		bON = wx.Button(panel,label='ACTIVATE CARD')
-		bON.SetFont(font)
 		adBox.Add(bON,flag=wx.EXPAND, border=10,proportion=1)
 
 		bOFF = wx.Button(panel,label='DEACTIVATE CARD')
-		bOFF.SetFont(font)
 		adBox.Add(bOFF,flag=wx.EXPAND, border=10,proportion=1)
 		hbox3.Add(adBox,flag=wx.EXPAND)
 
@@ -532,17 +520,57 @@ class Main_Window(wx.Frame):
 		bOFF.Bind(wx.EVT_BUTTON,self.OnToggleOff)
 
 		b2 = wx.Button(panel,label='DELETE CARD')
-		b2.SetFont(font)
 		hbox4.Add(b2,flag=wx.EXPAND, border=10, proportion =1)
 		hbox3.Add(hbox4,flag=wx.EXPAND)
 
-		fill2.Add(wx.StaticText(panel,label=""),flag=wx.EXPAND,border=10)
-		hbox3.Add(fill2,flag=wx.EXPAND,border=10)
+		#SPACER
+		hbox3.Add(wx.StaticLine(panel,wx.LI_HORIZONTAL),flag=wx.ALL|wx.EXPAND,border=20)
 
+		saveToData = wx.Button(panel,label='SAVE TO DATABASE')
+		saveToData.Bind(wx.EVT_BUTTON,self.OnExport)
 		b5 = wx.Button(panel,label="SAVE TO CARDS.TXT")
-		b5.SetFont(font)
 		b5.Bind(wx.EVT_BUTTON,self.OnSave)
+		hbox3.Add(saveToData,flag=wx.EXPAND)
 		hbox3.Add(b5,flag=wx.EXPAND)
+
+		#SEARCH SPACER
+		hbox3.Add(wx.StaticLine(panel,wx.LI_HORIZONTAL),flag=wx.ALL|wx.EXPAND,border=20)
+		
+
+		#SEARCH
+		sHBox = wx.BoxSizer(wx.HORIZONTAL)
+		sLabel = wx.StaticText(panel,label="Search:")
+		self.sEntry = wx.TextCtrl(panel)
+		sHBox.Add(sLabel, proportion=1,flag=wx.LEFT,border=10)
+		sHBox.Add(self.sEntry, proportion=2,flag=wx.LEFT|wx.EXPAND|wx.RIGHT, border=10)
+		hbox3.Add(sHBox, border = 10, flag=wx.EXPAND)
+		
+		#RADIO BUTTON SPACER
+		self.rSpacer = wx.StaticText(panel, label='')
+		self.rSpacer.SetFont(font)
+		self.rSpacer.SetForegroundColour('#ff0000')
+		hbox3.Add(self.rSpacer)
+
+		rBBox = wx.BoxSizer(wx.HORIZONTAL)
+		self.cRButton = wx.RadioButton(panel, label="CARD # SEARCH")
+		rBBox.Add(self.cRButton, border=10, flag=wx.LEFT|wx.EXPAND|wx.RIGHT)
+		self.cRButton.SetValue(True)
+		self.cRButton2 = wx.RadioButton(panel, label="ACCT # SEARCH")
+		rBBox.Add(self.cRButton2, border=10, flag=wx.LEFT|wx.EXPAND|wx.RIGHT)
+		hbox3.Add(rBBox,border=10)
+		
+		#SEARCH SPACER
+		hbox3.Add(wx.StaticLine(panel,wx.LI_HORIZONTAL),flag=wx.ALL,border=10)
+
+		#SEARCH BUTTONS
+		schBut = wx.Button(panel, label="SEARCH")
+		hbox3.Add(schBut, flag=wx.EXPAND)
+		schBut.Bind(wx.EVT_BUTTON,self.OnSearch)
+		rfsBut = wx.Button(panel, label="CLEAR SEARCH")
+		hbox3.Add(rfsBut, flag=wx.EXPAND)
+		rfsBut.Bind(wx.EVT_BUTTON,self.OnRefresh)
+
+		
 
 
 		hbox2.Add(hbox3,flag=wx.LEFT,border=10)
@@ -554,13 +582,49 @@ class Main_Window(wx.Frame):
 		self.Bind(wx.EVT_BUTTON,self.OnDelete, id=b2.GetId())
 		panel.SetSizer(vbox)
 
+	def OnRefresh(self, e):
+		self.Refresh()
+
+	def OnExport(self,e):
+		pass
+
+	def OnSearch(self, e):
+		if self.sEntry.GetValue() != "":
+			if self.cRButton.GetValue() == True:
+				self.listbox.Clear()
+				for i in self.inf.cardList:
+					space = ""
+					tgl = ""
+					if self.inf.cardList[i].card == self.sEntry.GetValue():
+						if self.inf.cardList[i].getActive() == True:
+							tgl = "ACTIVE     "
+						else:
+							tgl = "INACTIVE "
+						for __ in range(8 - len(self.inf.cardList[i].card)):
+							space = space + "  "
+						self.listbox.Append(tgl + "   CARD #: " + self.inf.cardList[i].card + space + self.inf.cardList[i].description)
+			else:
+				self.listbox.Clear()
+				temp = self.inf.cardList
+				for i in self.inf.cardList:
+					space = ""
+					tgl = ""
+					if self.inf.cardList[i].getAccount() == self.sEntry.GetValue():
+						if self.inf.cardList[i].getActive() == True:
+							tgl = "ACTIVE     "
+						else:
+							tgl = "INACTIVE "
+						for __ in range(8 - len(self.inf.cardList[i].card)):
+							space = space + "  "
+						self.listbox.Append(tgl + "   CARD #: " + self.inf.cardList[i].card + space + self.inf.cardList[i].description)
+
 	def OnEdit(self,e):
 		sel = self.listbox.GetSelection()
 		if sel != -1:
 			self.currentEdit = self.inf.cardList[self.listbox.GetString(sel).split()[3]].getCard()
 			ed = EditDialog(self, -1, 'Edit')
 			result = ed.ShowModal()
-			if result ==1:
+			if result == 1:
 				self.Refresh()
 			ed.Destroy()
 
