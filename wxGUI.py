@@ -7,6 +7,49 @@ class info():
 	def __init__(self):
 		self.cardList = {}
 
+class DoneDialog(wx.Dialog):
+	def __init__(self,*args,**kw):
+		super(DoneDialog,self).__init__(*args,**kw)
+
+		self.InitUI()
+		self.SetSize((150,150))
+		self.SetTitle('Done!')
+	
+	def InitUI(self):	
+		font = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		font.SetPointSize(12)
+		bfont = wx.SystemSettings.GetFont(wx.SYS_SYSTEM_FONT)
+		bfont.SetPointSize(4)
+
+		pnl = wx.Panel(self)
+		vbox = wx.BoxSizer(wx.VERTICAL)
+		sb = wx.StaticBox(pnl, label="")
+		sb.SetFont(font)
+		sbs = wx.StaticBoxSizer(sb,orient=wx.VERTICAL)
+
+		#spacer
+		spacer=wx.BoxSizer(wx.HORIZONTAL)
+		spaceText=wx.StaticText(pnl,label="  File saved!")
+		spaceText.SetFont(font)
+		spacer.Add(spaceText)
+		sbs.Add(spacer)
+		#spacer2
+		spacer2=wx.BoxSizer(wx.HORIZONTAL)
+		spacer2.Add(wx.StaticText(pnl,label=""))
+		sbs.Add(spacer2)
+
+		hbox = wx.BoxSizer(wx.HORIZONTAL)
+		bOK = wx.Button(pnl,label='OK')
+		bOK.Bind(wx.EVT_BUTTON,self.OnOK)
+		hbox.Add(bOK)
+
+		sbs.Add(hbox,flag=wx.EXPAND|wx.LEFT|wx.RIGHT,proportion=1,border=10)
+
+		pnl.SetSizer(sbs)
+
+	def OnOK(self,e):
+		self.EndModal(1)
+
 class EditDialog(wx.Dialog):
 	def __init__(self,parent,id,title):
 		wx.Dialog.__init__(self,parent,id,title)
@@ -650,8 +693,11 @@ class Main_Window(wx.Frame):
 		addDialog.Destroy()
 
 	def OnSave(self,e):
-		files.cardsOutput(self.inf.cardList)
-		print("Done!")
+		if self.listbox.GetCount() > 0:
+			files.cardsOutput(self.inf.cardList)
+			addDialog = DoneDialog(None)
+			addDialog.ShowModal()
+			addDialog.Destroy()
 		
 	
 	def OnToggleOn(self, e):
@@ -699,7 +745,7 @@ class Main_Window(wx.Frame):
 			self.inf.cardList[card.card] = card
 			self.Refresh()
 		else:
-			addDialog = ExistsError(None)
+			addDialog = DoneDialog(None)
 			addDialog.ShowModal()
 			addDialog.Destroy()
 
