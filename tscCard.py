@@ -4,7 +4,7 @@ import card
 import re
 
 class info():
-	def __init__(self):
+	def __init__(self): 
 		self.cardList = {}
 
 class DoneDialog(wx.Dialog):
@@ -627,10 +627,10 @@ class Main_Window(wx.Frame):
 		self.Refresh()
 
 	def OnExport(self,e):
-		with wx.FileDialog(self, "Save .tsv file", wildcard=".tsv files (*.tsv)|*.tsv",style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+		with wx.FileDialog(self, "Save .tsv file", defaultDir='c:\\ICS',wildcard=".tsv files (*.tsv)|*.tsv",style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
 				return     # the user changed their mind
-
+			
 			# save the current contents in the file
 			pathname = fileDialog.GetPath()
 			try:
@@ -705,7 +705,7 @@ class Main_Window(wx.Frame):
 
 	def OnSave(self,e):
 		if self.listbox.GetCount() > 0:
-			with wx.FileDialog(self, "Save cards.txt", wildcard="Card files (*.txt)|*.txt",style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+			with wx.FileDialog(self, "Save cards.txt", defaultDir='c:\\ICS',wildcard="Card files (*.txt)|*.txt",style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
 				if fileDialog.ShowModal() == wx.ID_CANCEL:
 					return     # the user changed their mind
 
@@ -757,7 +757,7 @@ class Main_Window(wx.Frame):
 			if wx.MessageBox("Data has not been saved to primary CSV. Proceed?", "Please confirm",wx.ICON_QUESTION | wx.YES_NO, self) == wx.NO:
 				return
     # otherwise ask the user what new file to open
-		with wx.FileDialog(self, "Open cards.txt file", wildcard="cards files (*.txt)|*.txt",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+		with wx.FileDialog(self, "Open cards.txt file", defaultDir='c:\\ICS',wildcard="cards files (*.txt)|*.txt",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
 
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
 				return     # the user changed their mind
@@ -785,7 +785,7 @@ class Main_Window(wx.Frame):
 				return
 
     # otherwise ask the user what new file to open
-		with wx.FileDialog(self, "Open .tsv file", wildcard=".tsv files (*.tsv)|*.tsv",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+		with wx.FileDialog(self, "Open .tsv file", defaultDir='c:\\ICS',wildcard=".tsv files (*.tsv)|*.tsv",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
 
 			if fileDialog.ShowModal() == wx.ID_CANCEL:
 				return     # the user changed their mind

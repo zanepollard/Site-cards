@@ -26,7 +26,7 @@ def importData(pathname):
 
 def numCheck(n):
     try:
-        val = int(n)
+        __ = int(n)
     except ValueError:
         return(None, False)
     return (n, True)
