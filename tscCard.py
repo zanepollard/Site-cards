@@ -492,7 +492,6 @@ class Main_Window(wx.Frame):
 		searchMenu = wx.Menu()
 
 		menuNew = fileMenu.Append(wx.ID_NEW,'&New')
-		menuSave = fileMenu.Append(wx.ID_SAVE,'&Save')
 		fileMenu.AppendSeparator()
 
 		imp = wx.Menu()
@@ -695,13 +694,12 @@ class Main_Window(wx.Frame):
 			self.listbox.Append(tgl + "   CARD #: " + self.inf.cardList[i].card + space + self.inf.cardList[i].description)
 
 	def OnNew(self, e):
-		if not self.contentNotSaved:
-			addDialog = Confirmation(None)
-			result = addDialog.ShowModal()
-			if result == 1:
-				self.inf.cardList.clear()
-				self.listbox.Clear()	
-			addDialog.Destroy()
+		addDialog = Confirmation(None)
+		result = addDialog.ShowModal()
+		if result == 1:
+			self.inf.cardList.clear()
+			self.listbox.Clear()	
+		addDialog.Destroy()
 
 	def OnSave(self,e):
 		if self.listbox.GetCount() > 0:
