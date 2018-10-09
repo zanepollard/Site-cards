@@ -471,12 +471,12 @@ class AddDialog(wx.Dialog):
 	def OnExit(self, e):
 		self.EndModal(0)
 
-
 class Main_Window(wx.Frame):
 
 	def __init__(self, *args, **kwargs):
 		super(Main_Window, self).__init__(*args, **kwargs)
 		icon = wx.Icon("tsc.ico", wx.BITMAP_TYPE_ANY)
+		self.contentNotSaved = False
 		self.searchType = ""
 		self.currentEdit = ""
 		self.inf = info()
@@ -497,19 +497,17 @@ class Main_Window(wx.Frame):
 
 		imp = wx.Menu()
 		imCard = imp.Append(wx.ID_ANY,'Import Cards.txt...')
-		imData = imp.Append(wx.ID_ANY,'Import from database...')
+		imData = imp.Append(wx.ID_ANY,'Import from tsv...')
 		fileMenu.Append(wx.ID_ANY, 'I&mport',imp)
 		fileMenu.AppendSeparator()
 		menuQuit = fileMenu.Append(wx.ID_EXIT,'&Quit')
 		menubar.Append(fileMenu, '&File')
 
-		byCard = searchMenu.Append(wx.ID_ANY, '&By Card Number')
-		byAcct = searchMenu.Append(wx.ID_ANY, '&By Account Number')
-
 		self.SetMenuBar(menubar)
 		self.Bind(wx.EVT_MENU, self.OnQuit, menuQuit)
 		self.Bind(wx.EVT_MENU, self.OnNew, menuNew)
 		self.Bind(wx.EVT_MENU, self.OnImportCards, imCard)
+		self.Bind(wx.EVT_MENU, self.OnOpenCSV, imData)
 		self.SetSize((880, 600))
 		
 		panel = wx.Panel(self)
@@ -569,7 +567,7 @@ class Main_Window(wx.Frame):
 		#SPACER
 		hbox3.Add(wx.StaticLine(panel,wx.LI_HORIZONTAL),flag=wx.ALL|wx.EXPAND,border=20)
 
-		saveToData = wx.Button(panel,label='SAVE TO DATABASE')
+		saveToData = wx.Button(panel,label='SAVE TO MASTER .TSV FILE')
 		saveToData.Bind(wx.EVT_BUTTON,self.OnExport)
 		b5 = wx.Button(panel,label="SAVE TO CARDS.TXT")
 		b5.Bind(wx.EVT_BUTTON,self.OnSave)
@@ -629,7 +627,18 @@ class Main_Window(wx.Frame):
 		self.Refresh()
 
 	def OnExport(self,e):
-		pass
+		with wx.FileDialog(self, "Save .tsv file", wildcard=".tsv files (*.tsv)|*.tsv",style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return     # the user changed their mind
+
+			# save the current contents in the file
+			pathname = fileDialog.GetPath()
+			try:
+				files.dataExport(self.inf.cardList, pathname)
+			except IOError:
+				wx.LogError("Cannot save current data in file '%s'." % pathname)
+			
+		self.contentNotSaved = False
 
 	def OnSearch(self, e):
 		if self.sEntry.GetValue() != "":
@@ -670,6 +679,7 @@ class Main_Window(wx.Frame):
 			if result == 1:
 				self.Refresh()
 			ed.Destroy()
+		self.contentNotSaved = True
 
 	def Refresh(self):
 		self.listbox.Clear()
@@ -685,21 +695,27 @@ class Main_Window(wx.Frame):
 			self.listbox.Append(tgl + "   CARD #: " + self.inf.cardList[i].card + space + self.inf.cardList[i].description)
 
 	def OnNew(self, e):
-		addDialog = Confirmation(None)
-		result = addDialog.ShowModal()
-		if result == 1:
-			self.inf.cardList.clear()
-			self.listbox.Clear()	
-		addDialog.Destroy()
+		if not self.contentNotSaved:
+			addDialog = Confirmation(None)
+			result = addDialog.ShowModal()
+			if result == 1:
+				self.inf.cardList.clear()
+				self.listbox.Clear()	
+			addDialog.Destroy()
 
 	def OnSave(self,e):
 		if self.listbox.GetCount() > 0:
-			files.cardsOutput(self.inf.cardList)
-			addDialog = DoneDialog(None)
-			addDialog.ShowModal()
-			addDialog.Destroy()
+			with wx.FileDialog(self, "Save cards.txt", wildcard="Card files (*.txt)|*.txt",style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+				if fileDialog.ShowModal() == wx.ID_CANCEL:
+					return     # the user changed their mind
+
+				# save the current contents in the file
+				pathname = fileDialog.GetPath()
+				try:
+					files.cardsOutput(self.inf.cardList, pathname)
+				except IOError:
+					wx.LogError("Cannot save current data in file '%s'." % pathname)
 		
-	
 	def OnToggleOn(self, e):
 		sel = self.listbox.GetSelection()
 		if sel != -1:
@@ -723,32 +739,65 @@ class Main_Window(wx.Frame):
 				self.listbox.Delete(sel)
 				self.inf.cardList.pop(self.listbox.GetString(sel).split()[3])
 			addDialog.Destroy()
+		self.contentNotSaved = True
 			
-
 	def OnAdd(self, e):
 		addDialog = AddDialog(None)
 		result = addDialog.ShowModal()
 		if result == 1:
 			self.AddCard(addDialog.completeCard)
 		addDialog.Destroy()
+		self.contentNotSaved = True
 
 	def OnQuit(self, e):
 		self.Close()
 
 	def OnImportCards(self, e):
+		if self.contentNotSaved:
+			if wx.MessageBox("Data has not been saved to primary CSV. Proceed?", "Please confirm",wx.ICON_QUESTION | wx.YES_NO, self) == wx.NO:
+				return
+    # otherwise ask the user what new file to open
+		with wx.FileDialog(self, "Open cards.txt file", wildcard="cards files (*.txt)|*.txt",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return     # the user changed their mind
+
+			# Proceed loading the file chosen by the user
+			pathname = fileDialog.GetPath()
+			try:
+				self.inf.cardList = files.importCards(pathname)
+			except IOError:
+				wx.LogError("Cannot open file '%s'." % newfile)
 		self.listbox.Clear()
-		self.inf.cardList = files.importCards()
 		self.Refresh()
+		self.contentNotSaved = True
 	
 	def AddCard(self,card):
 		if card.card not in self.inf.cardList:
+			print("adding card")
 			self.inf.cardList[card.card] = card
 			self.Refresh()
-		else:
-			addDialog = DoneDialog(None)
-			addDialog.ShowModal()
-			addDialog.Destroy()
+		self.contentNotSaved = True
 
+	def OnOpenCSV(self, e):
+		if self.contentNotSaved:
+			if wx.MessageBox("Data has not been saved to a .tsv File. Proceed?", "Please confirm",wx.ICON_QUESTION | wx.YES_NO, self) == wx.NO:
+				return
+
+    # otherwise ask the user what new file to open
+		with wx.FileDialog(self, "Open .tsv file", wildcard=".tsv files (*.tsv)|*.tsv",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+
+			if fileDialog.ShowModal() == wx.ID_CANCEL:
+				return     # the user changed their mind
+
+			pathname = fileDialog.GetPath()
+			try:
+				self.inf.cardList = files.importData(pathname)
+			except IOError:
+				wx.LogError("Cannot open file '%s'." % newfile)
+		self.listbox.Clear()
+		self.Refresh()
+		self.contentNotSaved = True
 
 def main():
 
