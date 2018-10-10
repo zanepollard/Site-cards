@@ -752,7 +752,7 @@ class Main_Window(wx.Frame):
 
 	def OnImportCards(self, e):
 		if self.contentNotSaved:
-			if wx.MessageBox("Data has not been saved to primary CSV. Proceed?", "Please confirm",wx.ICON_QUESTION | wx.YES_NO, self) == wx.NO:
+			if wx.MessageBox("Data has not been saved to TSV file. Proceed?", "Please confirm",wx.ICON_QUESTION | wx.YES_NO, self) == wx.NO:
 				return
     # otherwise ask the user what new file to open
 		with wx.FileDialog(self, "Open cards.txt file", defaultDir='c:\\ICS',wildcard="cards files (*.txt)|*.txt",style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:

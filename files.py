@@ -5,7 +5,8 @@ def importCards(pathname):
     lines ={}
     with open(pathname,'r') as cFile:
         for line in cFile:
-            lines[line[0:12].strip()] = card.card(line[0:12].strip(),line[12:36].strip(),line[36:66].strip(),line[66:78].strip(),line[78:102].strip(),line[102:126].strip(),True) 
+            if line[0:12].strip() not in lines:
+                lines[line[0:12].strip()] = card.card(line[0:12].strip(),line[12:36].strip(),line[36:66].strip(),line[66:78].strip(),line[78:102].strip(),line[102:126].strip(),True) 
     return lines
 
 def importData(pathname):
@@ -40,11 +41,11 @@ def cardsOutput(cardList,pathname):
     f = open(pathname, 'w+')
     twSpace = "            "
     eSpace = "        "
-    for i in cardList:
-        if cardList[i].getActive() == True:
-            f.write(format(cardList[i].getCard(),12) + format(cardList[i].getAccount(),12) + twSpace + 
-                    format(cardList[i].getDescription(),30) + format(cardList[i].getPin(),12) + 
-                    format(cardList[i].getSeq(),12) + twSpace + format(cardList[i].getAuth(),12) +
+    for i in sorted([int(cardList[card].getCard()) for card in cardList]):
+        if cardList[str(i)].getActive() == True:
+            f.write(format(cardList[str(i)].getCard(),12) + format(cardList[str(i)].getAccount(),12) + twSpace + 
+                    format(cardList[str(i)].getDescription(),30) + format(cardList[str(i)].getPin(),12) + 
+                    format(cardList[str(i)].getSeq(),12) + twSpace + format(cardList[str(i)].getAuth(),12) +
                     twSpace + eSpace + eSpace + "\n")
     f.close()
 
